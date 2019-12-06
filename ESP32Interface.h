@@ -57,11 +57,16 @@ public:
      *  Implicitly disables DHCP, which can be enabled in set_dhcp.
      *  Requires that the network is disconnected.
      *
-     *  @param ip_address Null-terminated representation of the local IP address
-     *  @param netmask    Null-terminated representation of the local network mask
-     *  @param gateway    Null-terminated representation of the local gateway
+     *  @param ip_address SocketAddress representation of the local IP address
+     *  @param netmask    SocketAddress representation of the local network mask
+     *  @param gateway    SocketAddress representation of the local gateway
      *  @return           0 on success, negative error code on failure
      */
+    virtual nsapi_error_t set_network(
+            const SocketAddress &ip_address, const SocketAddress &netmask,
+            const SocketAddress &gateway) override;
+
+    MBED_DEPRECATED_SINCE("mbed-os-5.15", "String-based APIs are deprecated")
     virtual nsapi_error_t set_network(
             const char *ip_address, const char *netmask, const char *gateway);
 
@@ -123,8 +128,15 @@ public:
     virtual int disconnect();
 
     /** Get the internally stored IP address
-     *  @return             IP address of the interface or null if not yet connected
+     *  @param          sockAddr SocketAddress pointer to store the local IP address
+     *  @retval         NSAPI_ERROR_OK on success
+     *  @retval         NSAPI_ERROR_UNSUPPORTED if this feature is not supported
+     *  @retval         NSAPI_ERROR_PARAMETER if the provided pointer is invalid
+     *  @retval         NSAPI_ERROR_NO_ADDRESS if the address cannot be obtained from stack
      */
+    virtual nsapi_error_t get_ip_address(SocketAddress *sockAddr);
+
+    MBED_DEPRECATED_SINCE("mbed-os-5.15", "String-based APIs are deprecated")
     virtual const char *get_ip_address();
 
     /** Get the internally stored MAC address
@@ -134,16 +146,28 @@ public:
 
      /** Get the local gateway
      *
-     *  @return         Null-terminated representation of the local gateway
-     *                  or null if no network mask has been recieved
+     *  @param          sockAddr SocketAddress representation of gateway address
+     *  @retval         NSAPI_ERROR_OK on success
+     *  @retval         NSAPI_ERROR_UNSUPPORTED if this feature is not supported
+     *  @retval         NSAPI_ERROR_PARAMETER if the provided pointer is invalid
+     *  @retval         NSAPI_ERROR_NO_ADDRESS if the address cannot be obtained from stack
      */
+    virtual nsapi_error_t get_gateway(SocketAddress *sockAddr);
+
+    MBED_DEPRECATED_SINCE("mbed-os-5.15", "String-based APIs are deprecated")
     virtual const char *get_gateway();
 
     /** Get the local network mask
      *
-     *  @return         Null-terminated representation of the local network mask
-     *                  or null if no network mask has been recieved
+     *  @param          sockAddr SocketAddress representation of netmask
+     *  @retval         NSAPI_ERROR_OK on success
+     *  @retval         NSAPI_ERROR_UNSUPPORTED if this feature is not supported
+     *  @retval         NSAPI_ERROR_PARAMETER if the provided pointer is invalid
+     *  @retval         NSAPI_ERROR_NO_ADDRESS if the address cannot be obtained from stack
      */
+    virtual nsapi_error_t get_netmask(SocketAddress *sockAddr);
+
+    MBED_DEPRECATED_SINCE("mbed-os-5.15", "String-based APIs are deprecated")
     virtual const char *get_netmask();
 
     /** Gets the current radio signal strength for active connection
@@ -221,9 +245,9 @@ private:
     char _ap_ssid[33]; /* 32 is what 802.11 defines as longest possible name; +1 for the \0 */
     char _ap_pass[64]; /* The longest allowed passphrase */
     nsapi_security_t _ap_sec;
-    char _ip_address[NSAPI_IPv6_SIZE];
-    char _netmask[NSAPI_IPv4_SIZE];
-    char _gateway[NSAPI_IPv4_SIZE];
+    SocketAddress _ip_address;
+    SocketAddress _netmask;
+    SocketAddress _gateway;
     nsapi_connection_status_t _connection_status;
     Callback<void(nsapi_event_t, intptr_t)> _connection_status_cb;
 
