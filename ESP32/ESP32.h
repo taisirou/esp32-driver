@@ -246,6 +246,15 @@ public:
      */
     int8_t get_wifi_status() const;
 
+    /**
+     * Flush the serial port input buffers.
+     *
+     * If you do HW reset for ESP module, you should
+     * flush the input buffers from existing responses
+     * from the device.
+     */
+    void flush();
+
     static const int8_t WIFIMODE_STATION = 1;
     static const int8_t WIFIMODE_SOFTAP = 2;
     static const int8_t WIFIMODE_STATION_SOFTAP = 3;
@@ -352,11 +361,11 @@ public:
     typedef struct {
         uint16_t  adv_int_min;       /**< minimum value of advertising interval; range: 0x0020 ~ 0x4000 */
         uint16_t  adv_int_max;       /**< maximum value of advertising interval; range: 0x0020 ~ 0x4000 */
-        uint8_t   adv_type;          /**< 0：ADV_TYPE_IND, 2：ADV_TYPE_SCAN_IND, 3：ADV_TYPE_NONCONN_IND */
-        uint8_t   own_addr_type;     /**< own BLE address type; 0：BLE_ADDR_TYPE_PUBLIC, 1：BLE_ADDR_TYPE_RANDOM */
+        uint8_t   adv_type;          /**< 0:FADV_TYPE_IND, 2:FADV_TYPE_SCAN_IND, 3:FADV_TYPE_NONCONN_IND */
+        uint8_t   own_addr_type;     /**< own BLE address type; 0:FBLE_ADDR_TYPE_PUBLIC, 1:FBLE_ADDR_TYPE_RANDOM */
         uint8_t   channel_map;       /**< channel of advertising; ADV_CHNL_~ */
         uint8_t   adv_filter_policy; /**< filter policy of advertising; ADV_FILTER_ALLOW_SCAN_~ */
-        uint8_t   peer_addr_type;    /**< remote BLE address type; 0：PUBLIC, 1：RANDOM */
+        uint8_t   peer_addr_type;    /**< remote BLE address type; 0:FPUBLIC, 1:FRANDOM */
         uint8_t   peer_addr[6];      /**< remote BLE address */
     } advertising_param_t;
 

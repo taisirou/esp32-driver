@@ -44,6 +44,11 @@ public:
     ESP32Interface(PinName en, PinName io0, PinName tx, PinName rx, bool debug = false,
                    PinName rts = NC, PinName cts = NC, int baudrate = 230400);
 
+    /**
+     * @brief ESP32Interface default destructor
+     */
+    virtual ~ESP32Interface();
+
     /** ESP32Interface lifetime
      * @param tx        TX pin
      * @param rx        RX pin
@@ -241,6 +246,19 @@ public:
     }
 
 private:
+
+    // HW reset pin
+    class ResetPin {
+    public:
+        ResetPin(PinName rst_pin);
+        void rst_assert();
+        void rst_deassert();
+        bool is_connected();
+    private:
+        mbed::DigitalOut  _rst_pin;
+    } _rst_pin;
+
+    int _initialized;
     bool _dhcp;
     char _ap_ssid[33]; /* 32 is what 802.11 defines as longest possible name; +1 for the \0 */
     char _ap_pass[64]; /* The longest allowed passphrase */
@@ -249,10 +267,12 @@ private:
     SocketAddress _netmask;
     SocketAddress _gateway;
     nsapi_connection_status_t _connection_status;
-    Callback<void(nsapi_event_t, intptr_t)> _connection_status_cb;
+    mbed::Callback<void(nsapi_event_t, intptr_t)> _connection_status_cb;
 
     void set_connection_status(nsapi_connection_status_t connection_status);
     void wifi_status_cb(int8_t wifi_status);
+    nsapi_error_t _init(void);
+    nsapi_error_t _reset(void);
 };
 
 #endif
