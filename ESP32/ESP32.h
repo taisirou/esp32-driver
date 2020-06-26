@@ -24,15 +24,21 @@
 #include <stdlib.h>
 #include "drivers/DigitalOut.h"
 #include "drivers/SerialBase.h"
-#include "drivers/BufferedSerial.h"
 #include "features/netsocket/nsapi_types.h"
 #include "features/netsocket/WiFiAccessPoint.h"
 #include "PinNames.h"
 #include "platform/ATCmdParser.h"
 #include "platform/Callback.h"
 #include "platform/mbed_error.h"
+#include "platform/mbed_version.h"
 #include "rtos/Mutex.h"
 #include "rtos/ThisThread.h"
+
+#if (MBED_MAJOR_VERSION >= 6)
+#include "drivers/BufferedSerial.h"
+#else
+#include "drivers/UARTSerial.h"
+#endif
 
 #ifndef ESP32_CONNECT_TIMEOUT
 #define ESP32_CONNECT_TIMEOUT 15000
@@ -269,7 +275,11 @@ private:
     mbed::DigitalOut * _p_wifi_io0;
     bool _init_end_common;
     bool _init_end_wifi;
+#if (MBED_MAJOR_VERSION >= 6)
     mbed::BufferedSerial _serial;
+#else
+    mbed::UARTSerial _serial;
+#endif
     mbed::ATCmdParser _parser;
     struct packet {
         struct packet *next;
