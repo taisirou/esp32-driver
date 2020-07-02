@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include "drivers/DigitalOut.h"
 #include "drivers/SerialBase.h"
-#include "drivers/UARTSerial.h"
+#include "drivers/BufferedSerial.h"
 #include "features/netsocket/nsapi_types.h"
 #include "features/netsocket/WiFiAccessPoint.h"
 #include "PinNames.h"
@@ -260,7 +260,7 @@ private:
     mbed::DigitalOut * _p_wifi_io0;
     bool _init_end_common;
     bool _init_end_wifi;
-    mbed::UARTSerial _serial;
+    mbed::BufferedSerial _serial;
     mbed::ATCmdParser _parser;
     struct packet {
         struct packet *next;
