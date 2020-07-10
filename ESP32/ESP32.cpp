@@ -24,6 +24,8 @@
 
 using namespace mbed;
 using namespace rtos;
+using namespace std::chrono;
+using std::milli;
 
 ESP32 * ESP32::instESP32 = NULL;
 
@@ -191,7 +193,7 @@ void ESP32::_startup_common()
     }
     if (_p_wifi_en != NULL) {
         _p_wifi_en->write(0);
-        ThisThread::sleep_for(10);
+        ThisThread::sleep_for(10ms);
         _p_wifi_en->write(1);
         _parser.recv("ready");
     } else {
@@ -351,7 +353,7 @@ bool ESP32::accept(int * p_id)
         }
         _smutex.unlock();
         if (!ret) {
-            ThisThread::sleep_for(5);
+            ThisThread::sleep_for(5ms);
         }
     }
 
@@ -392,7 +394,7 @@ bool ESP32::reset(void)
 #endif
             }
 
-            ThisThread::sleep_for(5);
+            ThisThread::sleep_for(5ms);
 
             uint8_t wk_ver[4+1]; /* It needs 1 byte extra. */
 
@@ -654,7 +656,7 @@ int ESP32::scan(WiFiAccessPoint *res, unsigned limit)
         _smutex.lock();
         _startup_wifi();
         _smutex.unlock();
-        ThisThread::sleep_for(1500);
+        ThisThread::sleep_for(1500ms);
     }
 
     _smutex.lock();
@@ -1108,6 +1110,14 @@ int8_t ESP32::get_wifi_status() const
 {
     return _wifi_status;
 }
+
+void ESP32::flush()
+{
+    _smutex.lock();
+    _parser.flush();
+    _smutex.unlock();
+}
+
 
 #if defined(TARGET_ESP32AT_BLE)
 bool ESP32::ble_set_role(int role)

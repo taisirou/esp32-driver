@@ -21,6 +21,8 @@
 ESP32Interface::ESP32Interface() :
     ESP32Stack(MBED_CONF_ESP32_WIFI_EN, MBED_CONF_ESP32_WIFI_IO0, MBED_CONF_ESP32_WIFI_TX, MBED_CONF_ESP32_WIFI_RX, MBED_CONF_ESP32_WIFI_DEBUG,
                MBED_CONF_ESP32_WIFI_RTS, MBED_CONF_ESP32_WIFI_CTS, MBED_CONF_ESP32_WIFI_BAUDRATE, 0),
+    _rst_pin(MBED_CONF_ESP32_WIFI_EN),
+    _initialized(false),
     _dhcp(true),
     _ap_ssid(),
     _ap_pass(),
@@ -38,6 +40,8 @@ ESP32Interface::ESP32Interface() :
 ESP32Interface::ESP32Interface(PinName en, PinName io0, PinName tx, PinName rx, bool debug,
     PinName rts, PinName cts, int baudrate) :
     ESP32Stack(en, io0, tx, rx, debug, rts, cts, baudrate, 0),
+    _rst_pin(en),
+    _initialized(false),
     _dhcp(true),
     _ap_ssid(),
     _ap_pass(),
@@ -54,6 +58,8 @@ ESP32Interface::ESP32Interface(PinName en, PinName io0, PinName tx, PinName rx, 
 
 ESP32Interface::ESP32Interface(PinName tx, PinName rx, bool debug) :
     ESP32Stack(NC, NC, tx, rx, debug, NC, NC, 230400, 0),
+    _rst_pin(MBED_CONF_ESP32_WIFI_EN),
+    _initialized(false),
     _dhcp(true),
     _ap_ssid(),
     _ap_pass(),
@@ -108,6 +114,8 @@ int ESP32Interface::connect(const char *ssid, const char *pass, nsapi_security_t
     if (ret != NSAPI_ERROR_OK) {
         return ret;
     }
+
+    _init();
     return connect();
 }
 
@@ -201,6 +209,7 @@ int ESP32Interface::set_channel(uint8_t channel)
 
 int ESP32Interface::disconnect()
 {
+    _initialized = false;
     if (_connection_status == NSAPI_STATUS_DISCONNECTED) {
         return NSAPI_ERROR_NO_CONNECTION;
     }
@@ -263,6 +272,7 @@ int8_t ESP32Interface::get_rssi()
 
 int ESP32Interface::scan(WiFiAccessPoint *res, unsigned count)
 {
+    _init();
     return _esp->scan(res, count);
 }
 
@@ -311,3 +321,56 @@ WiFiInterface *WiFiInterface::get_default_instance() {
 
 #endif
 
+ESP32Interface::~ESP32Interface()
+{
+    // Power down the modem
+    _rst_pin.rst_assert();
+}
+
+ESP32Interface::ResetPin::ResetPin(PinName rst_pin) : _rst_pin(mbed::DigitalOut(rst_pin, 1))
+{
+}
+
+void ESP32Interface::ResetPin::rst_assert()
+{
+    if (_rst_pin.is_connected()) {
+        _rst_pin = 0;
+        //tr_debug("rst_assert(): HW reset asserted.");
+    }
+}
+
+void ESP32Interface::ResetPin::rst_deassert()
+{
+    if (_rst_pin.is_connected()) {
+        _rst_pin = 1;
+        //tr_debug("rst_deassert(): HW reset deasserted.");
+    }
+}
+
+bool ESP32Interface::ResetPin::is_connected()
+{
+    return _rst_pin.is_connected();
+}
+
+nsapi_error_t ESP32Interface::_init(void)
+{
+    if (!_initialized) {
+        if (_reset() != NSAPI_ERROR_OK) {
+            return NSAPI_ERROR_DEVICE_ERROR;
+        }
+        _initialized = true;
+    }
+    return NSAPI_ERROR_OK;
+}
+
+nsapi_error_t ESP32Interface::_reset(void)
+{
+    if (_rst_pin.is_connected()) {
+        _rst_pin.rst_assert();
+        rtos::ThisThread::sleep_for(2ms);
+        _esp->flush();
+        _rst_pin.rst_deassert();
+    }
+
+    return NSAPI_ERROR_OK;
+}
