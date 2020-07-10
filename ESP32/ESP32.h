@@ -34,10 +34,10 @@
 #include "rtos/Mutex.h"
 #include "rtos/ThisThread.h"
 
-#if (MBED_MAJOR_VERSION >= 6)
-#include "drivers/BufferedSerial.h"
-#else
+#if (MBED_MAJOR_VERSION < 6)
 #include "drivers/UARTSerial.h"
+#else
+#include "drivers/BufferedSerial.h"
 #endif
 
 #ifndef ESP32_CONNECT_TIMEOUT
@@ -275,10 +275,10 @@ private:
     mbed::DigitalOut * _p_wifi_io0;
     bool _init_end_common;
     bool _init_end_wifi;
-#if (MBED_MAJOR_VERSION >= 6)
-    mbed::BufferedSerial _serial;
-#else
+#if (MBED_MAJOR_VERSION < 6)
     mbed::UARTSerial _serial;
+#else
+    mbed::BufferedSerial _serial;
 #endif
     mbed::ATCmdParser _parser;
     struct packet {
